@@ -19,7 +19,7 @@
  * CONFIGURATION SETTINGS
  ***************************************/
 #define SET_BLE_NAME (0)
-String ble_name = "Motion Midi 0"; // The name that gets advertised by the BLE chip
+String ble_name = "Your name here"; // The name that gets advertised by the BLE chip
 
 #define NUM_MUX_PORTS (16)
 #define HISTORY_DEPTH (10)  // The number of readings to average together before deciding which note to play. Lower numbers make the notes more responsive, but also more erratic. Higher numbers are more smooth, but slower to react to motion.
@@ -27,11 +27,11 @@ String ble_name = "Motion Midi 0"; // The name that gets advertised by the BLE c
 #define SEND_SLEEP_MS (100) // This limits how frequently you send output (milliseconds)
 #define NOTE_ON_DURATION_MS (50) // How long notes are played for
 
-#define MUX_SIG (A0)
-#define MUX_ADDR_0 (15) //aka A1
-#define MUX_ADDR_1 (16) //aka A2
-#define MUX_ADDR_2 (17) //aka A3
-#define MUX_ADDR_3 (18) //aka A4
+#define MUX_SIG (A1)
+#define MUX_ADDR_0 (11)
+#define MUX_ADDR_1 (10)
+#define MUX_ADDR_2 (9)
+#define MUX_ADDR_3 (6)
 
 /* END OF CONFIGURATION - DON'T CHANGE STUFF BELOW HERE */
 
@@ -169,6 +169,22 @@ void ble_tick()
   ble.update(500);
 }
 
+void print_debug()
+{
+  Serial.println("Values:");
+  for (int i = 0; i < NUM_MUX_PORTS; i++)
+  {
+    Serial.print(latest[i]); Serial.print(" ");
+  }
+
+  Serial.println("Movement?:");
+  for (int i = 0; i < NUM_MUX_PORTS; i++)
+  {
+    Serial.print(movement[i] ? "1" : "0"); Serial.print(" ");
+  }
+  Serial.println("");
+}
+
 void read_vibrations()
 {
   for (int i = 0; i < NUM_MUX_PORTS; i++)
@@ -180,6 +196,7 @@ void read_vibrations()
 
     latest[i] = analogRead(MUX_SIG);
     history[i][history_index] = latest[i];
+    delay(10);
   }
   history_index = (history_index + 1) % HISTORY_DEPTH;
 
@@ -198,7 +215,7 @@ void calc_is_movement()
 {
   for (int i = 0; i < NUM_MUX_PORTS; i++)
   {
-    movement[i] = (latest[i] > (avg[i]*1.15)) || (latest[i] < (avg[i]*0.85));
+    movement[i] = (latest[i] > (avg[i]*2)) || (latest[i] < (avg[i]*0.5));
   }
 }
 
@@ -218,6 +235,8 @@ void loop()
   if ((total_measurements > HISTORY_DEPTH) && ((curr_time - last_send_time) > SEND_SLEEP_MS))
   {
     calc_is_movement();
+    print_debug();
+
     for (int i = 0; i < NUM_MUX_PORTS; i++)
     {
       if (movement[i])
