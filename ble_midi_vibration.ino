@@ -141,6 +141,8 @@ void setup_ble_midi()
 
 void setup() 
 {
+  pinMode(MUX_SIG, INPUT);
+  
   delay(500);
   Serial.begin(115200);
   delay(500);
@@ -171,13 +173,19 @@ void ble_tick()
 
 void print_debug()
 {
-  Serial.println("Values:");
+  Serial.println("\nLatest Values:");
   for (int i = 0; i < NUM_MUX_PORTS; i++)
   {
     Serial.print(latest[i]); Serial.print(" ");
   }
 
-  Serial.println("Movement?:");
+  Serial.println("\nAvg Values:");
+  for (int i = 0; i < NUM_MUX_PORTS; i++)
+  {
+    Serial.print(avg[i]); Serial.print(" ");
+  }
+
+  Serial.println("\nMovement?:");
   for (int i = 0; i < NUM_MUX_PORTS; i++)
   {
     Serial.print(movement[i] ? "1" : "0"); Serial.print(" ");
@@ -187,12 +195,13 @@ void print_debug()
 
 void read_vibrations()
 {
-  for (int i = 0; i < NUM_MUX_PORTS; i++)
+  for (int i = 0; i < NUM_MUX_PORTS; i+= 2)
   {
-    digitalWrite(MUX_ADDR_0, (i & 0x1));
-    digitalWrite(MUX_ADDR_1, (i & 0x2));  
-    digitalWrite(MUX_ADDR_2, (i & 0x4));
-    digitalWrite(MUX_ADDR_3, (i & 0x8));
+    digitalWrite(MUX_ADDR_0, bitRead(i, 0));
+    digitalWrite(MUX_ADDR_1, bitRead(i, 1));
+    digitalWrite(MUX_ADDR_2, bitRead(i, 2));
+    digitalWrite(MUX_ADDR_3, bitRead(i, 3));
+    delay(10);
 
     latest[i] = analogRead(MUX_SIG);
     history[i][history_index] = latest[i];
