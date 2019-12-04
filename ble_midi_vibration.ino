@@ -224,7 +224,7 @@ void calc_is_movement()
 {
   for (int i = 0; i < NUM_MUX_PORTS; i++)
   {
-    movement[i] = (latest[i] > (avg[i]*2)) || (latest[i] < (avg[i]*0.5));
+    movement[i] = (latest[i] > (avg[i]*2)) || (latest[i] < (avg[i]*0.3));
   }
 }
 
